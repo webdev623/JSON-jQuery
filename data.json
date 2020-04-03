@@ -1,0 +1,22 @@
+{
+  "scenarios": [
+    "scenario1",
+    "scenario2",
+    "scenario3"
+  ],
+  "variations": [
+    {
+      "scenario": "scenario1",
+      "variation": ["variation1", "xxx", "YYY", "ZZZ"]
+    },
+    {
+      "scenario": "scenario2",
+      "variation": ["variation2", "xxx2", "YYY2", "ZZZ2"]
+    },
+    {
+      "scenario": "scenario3",
+      "variation": ["variation3", "xxx3", "YYY3", "ZZZ3"]
+    }
+  ]
+}
+

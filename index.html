@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta http-equiv='cache-control' content='no-cache'>
+    <meta http-equiv='expires' content='0'>
+    <meta http-equiv='pragma' content='no-cache'>
+    <!-- Bootstrap CSS -->
+    <!-- <link rel="stylesheet" href="assets/css/bootstrap-grid.min.css"> -->
+    <link rel="stylesheet" href="assets/css/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/select2.min.css">
+    <link rel="stylesheet" href="assets/css/select2-bootstrap4.css">
+    <script src="./assets/js/jquery.min.js"></script>
+    <style type="text/css">
+      .nav-tabs .nav-link.active{
+        border-color: #dee2e6 #fff #dee2e6 #dee2e6 !important;
+      }
+      .tab-content{
+        border: 1px solid #dee2e6 !important;
+        width: 80% !important;
+        margin-left: 0px !important;
+        height: 300px;
+      }
+      nav{
+        /*padding-right: 0px !important;*/
+      }
+    </style>
+
+    <title>JSON data Edit</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="row justify-content-end mt-5">
+          <button type="button" class="btn btn-primary mr-2" id="add_scenario">Add Scenario</button>
+          <button type="button" class="btn btn-success mr-2" id="add_variation">Add Variation</button>
+          <button type="button" class="btn btn-warning" id="export_json">Export JSON</button>
+      </div>
+      <div class="row mt-3">
+        <nav class="col-2 pr-0">
+          <div class="nav nav-tabs flex-column" id="nav-tab" role="tablist">
+          </div>
+        </nav>
+        <div class="tab-content col-10 p-3 overflow-auto" id="nav-tabContent">
+        </div>
+      </div>
+    </div>
+
+    <!--------------------------- scenario add modal ------------------------------------>
+    <div class="modal" tabindex="-1" role="dialog" id="add_scenario_modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add Scenario</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <input type="text" class="col-12" name="new_scenario" id="new_scenario">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="scenario_save">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--------------------------- scenario add modal ------------------------------------>
+    <div class="modal" tabindex="-1" role="dialog" id="add_variation_modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Add & Edit Variation</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <select class="simple-select2 col-12" id="scenario_list" placeholder="Select Scenario">
+              <option value="" disabled selected>Select Scenario</option>
+            </select>
+            <textarea class="form-control mt-3" id="new_variation" name="new_variation" placeholder="add variation"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="variation_save">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!--------------------------- Export JSON data modal ------------------------------------>
+    <div class="modal" tabindex="-1" role="dialog" id="export_json_modal">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Export JSON</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <textarea class="form-control mt-3" id="json_data" rows="20" name="json_data" placeholder="export json data"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" id="json_copy">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <!-- <script src="./jquery-3.3.1.slim.min.js"></script> -->
+    <script src="./assets/js/popper.min.js"></script>
+    <!-- <script src="./assets/js/bootstrap.bundle.min.js"></script> -->
+    <script src="./assets/js/bootstrap.min.js"></script>
+    <script src="./assets/js/select2.full.min.js"></script>
+
+    <script type="text/javascript">
+      $(function(){
+        var scenario_modal_monitor = 0; //scenario modal display acount
+        var scenario_modal_account = 0; //scenario modal save account
+        var variation_modal_monitor = 0; //variation modal display acount
+        var variation_modal_account = 0; //variation modal save account
+        /*********** select box initialize *****************/
+        $(".simple-select2").select2({
+              theme: 'bootstrap4',
+              placeholder: "Select Scenario",
+              allowClear: true
+        });
+        /*********** select box initialize end *****************/
+
+        /************************** init page loading ****************************/
+        var json_data = [];
+        $.getJSON( "data.json", function( data ) {
+          json_data = data;
+          tab_content_update(0);
+        });
+        /************************** init page loading end **************************/
+
+        /*********************** Add Scenario **************************************/
+        $("#add_scenario").click(function(){
+          scenario_modal_account++;
+          $("#add_scenario_modal").modal("show");
+          scenario_modal_monitor = 0;
+          $("#scenario_save").click(function(){
+            scenario_modal_monitor++;
+            if(scenario_modal_monitor == scenario_modal_account){
+              var new_scenario = $("#new_scenario").val();
+              var scenario_amount = json_data.scenarios.length;
+              json_data.scenarios[scenario_amount] = new_scenario;
+              json_data.variations[scenario_amount] = {"scenario": new_scenario, "variation": []};
+              tab_content_update(0);
+              $("#add_scenario_modal .modal-body").find("input,textarea,select").val('').end();
+              $("#add_scenario_modal").modal("hide");
+            }
+          });
+        });
+        /*********************** Add Scenario End**************************************/
+
+        /************************* Add Variation **************************************/
+        $("#add_variation").click(function(){
+          variation_modal_account++;
+          $("#add_variation_modal").modal("show");
+          variation_modal_monitor = 0;
+          $.each( json_data.scenarios, function( key, val ) {
+            if ($('#scenario_list').find("option[value='" + key + "']").length) {
+                $('#scenario_list').val(val).trigger('change');
+            } else { 
+                var newOption = new Option(val, key, false, false);
+                $('#scenario_list').append(newOption).trigger('change');
+            } 
+          });
+          $('#scenario_list').prop("disabled", false);
+          $(".simple-select2").select2({
+                theme: 'bootstrap4',
+                placeholder: "Select an option",
+                allowClear: true
+          });
+
+          $("#variation_save").click(function(){
+            variation_modal_monitor++;
+            if(variation_modal_monitor == variation_modal_account){
+              var new_variation = $("#new_variation").val();
+              var scenraio_selected = $("#scenario_list").val();
+              var variation_amount = json_data.variations[scenraio_selected].variation.length;
+              json_data.variations[scenraio_selected].variation[variation_amount] = new_variation;
+              $("#add_variation_modal .modal-body").find("input,textarea,select").val('').end();
+              tab_content_update(scenraio_selected);
+              $("#add_variation_modal").modal("hide");
+            }
+          });
+        });
+        /*********************** Add Variation End **************************************/
+
+        /********************** Display tab content from JSON data ***********************/
+        function tab_content_update(active_number){
+            $("#nav-tab").empty();
+            $("#nav-tabContent").empty();
+            $.each(json_data.scenarios, function( scenario_key, scenario_value ) {
+              if(scenario_key == active_number){
+                var nav_active = "active";
+                var content_active = "show active";
+              }
+              else{
+                var nav_active = "";
+                var content_active = "";
+              }
+              $("<a class='nav-item nav-link " + nav_active + "' id='" + scenario_value + "-tab'  data-toggle='tab' href='#"+ scenario_value + "' role='tab' aria-controls='" + scenario_value + "' aria-selected='true'>" + scenario_value + "</a>" ).appendTo("#nav-tab");
+              var tab_content = json_data.variations[scenario_key].variation;
+              $("<div class='tab-pane fade " + content_active + "' id='" + scenario_value + "'  role='tabpanel' aria-labelledby='" + scenario_value + "-tab'></div>" ).appendTo("#nav-tabContent");
+              $("#" + scenario_value).empty();
+              $.each(tab_content, function(variation_key, variation_value){
+                if(variation_value !== null && variation_value !== "" && variation_value !== undefined)
+                $("<div class='row mb-2' id='" + scenario_key + "_variation_content_" + variation_key + "'><div class='col-10 m-0 text-break'>" + variation_value + "</div><div class='col-2 m-0'><a class='float-right delete' id='" + scenario_key + "_" + variation_key + "_" + variation_value +"'><i class='fa fa-remove'></i></a><a class='float-right edit mr-2' id='" + scenario_key + "_" + variation_key + "_" + variation_value +"'><i class='fa fa-edit'></i></a></div></div><hr>").appendTo("#" + scenario_value);
+              });
+            });
+        }
+        /********************** Display tab content from JSON data End ***********************/
+
+        /********************** Delete & Edit JSON data **************************************/
+        $("#nav-tabContent").on("click", "a", function(){
+          var object_class = this.className;
+          var object_id = this.id;
+          console.log(object_id);
+          var object_id_array = object_id.split("_");
+          if(object_class.indexOf("delete") > 0){
+            /************************* Delete Variation **********************************/
+            delete json_data.variations[object_id_array[0]].variation[object_id_array[1]];
+            tab_content_update(object_id_array[0]);
+          }
+          else if(object_class.indexOf("edit") > 0){
+            /************************* Edit Variation **************************************/
+              variation_modal_account++;
+              $("#add_variation_modal").modal("show");
+              variation_modal_monitor = 0;
+              $.each( json_data.scenarios, function( key, val ) {
+                if ($('#scenario_list').find("option[value='" + key + "']").length) {
+                    $('#scenario_list').val(val).trigger('change');
+                } else { 
+                    var newOption = new Option(val, key, false, false);
+                    $('#scenario_list').append(newOption).trigger('change');
+                } 
+              });
+              $(".simple-select2").select2({
+                    theme: 'bootstrap4',
+                    placeholder: "Select Scenario",
+                    allowClear: true
+              });
+              $('#scenario_list').select2().val(object_id_array[0]).trigger('change');
+              $('#scenario_list').prop("disabled", true);
+              $("#new_variation").val(json_data.variations[object_id_array[0]].variation[object_id_array[1]]);
+              $("#variation_save").click(function(){
+                variation_modal_monitor++;
+                if(variation_modal_monitor == variation_modal_account){
+                  var new_variation = $("#new_variation").val();
+                  var scenraio_selected = $("#scenario_list").val();
+                  json_data.variations[object_id_array[0]].variation[object_id_array[1]] = new_variation;
+                   $("#add_variation_modal .modal-body").find("input,textarea,select").val('').end();
+                  $("#add_variation_modal").modal("hide");
+                  tab_content_update(object_id_array[0]);
+                }
+              });
+            /*********************** Edit Variation End **************************************/
+          }
+        });
+        /********************** Delete & Edit JSON data End **************************************/
+        /********************** Export JSON data **************************************/
+        $("#export_json").click(function(){
+          $("#export_json_modal").modal("show");
+          var json_string = JSON.stringify(json_data);
+          $("#json_data").val(json_string);
+          $("#json_copy").click(function(){
+            $("#json_data").select();
+            document.execCommand('copy');
+          });
+        });
+        /********************** Export JSON data End **************************************/
+      }); 
+    </script>
+  </body>
+</html>
